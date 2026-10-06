@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TRUST / FALL — Play</title>
+<meta name="description" content="Play TRUST / FALL, a multiplayer game of alliances and betrayal.">
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b0c0c;color:#eee9df;font:18px Georgia,serif;text-align:center}main{padding:32px}h1{letter-spacing:.15em}a{display:inline-block;padding:16px 28px;background:#77232b;border:1px solid #b7484e;color:#fff;text-decoration:none}p{color:#c9c0ac}</style>
+<script>
+const game = new URL('https://trust-fall-table.actionintime.chatgpt.site/');
+const room = new URLSearchParams(location.search).get('room');
+if (room && /^[A-Z2-9]{5}$/i.test(room)) game.searchParams.set('room', room.toUpperCase());
+location.replace(game.href);
+</script>
+</head>
+<body><main><h1>TRUST / FALL</h1><p>Opening the multiplayer table…</p><a href="https://trust-fall-table.actionintime.chatgpt.site/">Play TRUST / FALL</a><p>The game runs on its live multiplayer server.</p></main></body>
+</html>
