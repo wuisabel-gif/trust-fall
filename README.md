@@ -23,3 +23,9 @@ Install dependencies, run `npm run db:generate` after schema changes, and apply 
 Tested two isolated browser contexts (desktop 1536×1024 and mobile 390×844), synchronized chat, private choice visibility, lock immutability, scoring, reload recovery, five rounds, winning, rematch, rules, and mobile overflow. Engine checks cover 2–6 player pairing, all payoff combinations, timeout defaults, and host restrictions. Physical devices and large concurrent audiences have not been load-tested.
 
 Art was generated with built-in imagegen from the approved concept: a charcoal underground tournament room with four original adult anime competitors, dark round table, muted crimson banners, gold rim lighting, and no text or interface. Asset: `public/tournament-room.png`.
+
+## Source and assets
+
+Source repository: https://github.com/wuisabel-gif/trust-fall (private).
+
+Player seats use a dedicated transparent portrait strip. See `docs/art-assets.md` for asset paths and generation details. Changes are committed in small focused steps.
