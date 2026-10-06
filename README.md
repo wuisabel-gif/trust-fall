@@ -2,6 +2,36 @@
 
 A browser game for 2–6 players: negotiate, cooperate or betray, reveal choices, and compete for points across five rounds. Share the public link and a five-character room code. Players do not need an account.
 
+## Play the game
+
+[Open TRUST / FALL](https://trust-fall-table.actionintime.chatgpt.site)
+
+### 1. Enter your name
+
+Create a new table or join a friend’s table. No login or installation is required.
+
+![Game entry screen](docs/screenshots/01-entry.png)
+
+### 2. Join with a room code
+
+Enter your name and the host’s five-character room code, then click **Join table**. Invitation links fill in the code automatically.
+
+![Entering a room code to join a table](docs/screenshots/02-join-room.png)
+
+### 3. Meet in the waiting room
+
+Players on separate devices appear at the same table. Everyone clicks **I’m ready**, then the host clicks **Start game**.
+
+![Two players successfully joined the same room](docs/screenshots/03-room-lobby.png)
+
+### 4. Negotiate and choose in secret
+
+Chat, make promises, and lock in **Cooperate** or **Betray**. Choices reveal together and the server updates everyone’s scores.
+
+![Live multiplayer gameplay with shared chat and secret choices](docs/screenshots/04-gameplay.png)
+
+These screenshots were captured from the actual deployed game using two separate browser sessions. The pictured room is an example; create a fresh table to play.
+
 ## Game flow
 
 Create or join → everyone ready → host starts → 45-second negotiation → secret locked choices → reveal → 12-second intermission → next round → winner → host opens rematch.
