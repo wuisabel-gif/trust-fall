@@ -4,7 +4,9 @@ A browser game for 2–6 players: negotiate, cooperate or betray, reveal choices
 
 ## Play the game
 
-[Open TRUST / FALL](https://trust-fall-table.actionintime.chatgpt.site)
+[Open TRUST / FALL](https://trust-fall-table.actionintime.chatgpt.site) · [GitHub Pages entry](https://wuisabel-gif.github.io/trust-fall/)
+
+The GitHub Pages link opens the live game. Multiplayer state and scoring run on the shared backend; GitHub Pages hosts the entry redirect on the `gh-pages` branch.
 
 ### 1. Enter your name
 
