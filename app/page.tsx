@@ -1,0 +1,27 @@
+'use client';
+import { useEffect,useRef,useState } from 'react';
+import { CircleHelp,Copy,LogOut } from 'lucide-react';
+import { requestGame,type Session,type PublicRoom } from '../lib/game/client';
+import { Rules } from '../components/game/Rules';
+import { Chat } from '../components/game/Chat';
+import { Table } from '../components/game/Table';
+export default function Game(){
+ const [session,setSession]=useState<Session|null>(null),[room,setRoom]=useState<PublicRoom|null>(null),[name,setName]=useState(''),[code,setCode]=useState(''),[rules,setRules]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[now,setNow]=useState(Date.now()),[copied,setCopied]=useState(false),[offline,setOffline]=useState(false);
+ const offset=useRef(0),generation=useRef(0);
+ useEffect(()=>{try{const saved=sessionStorage.getItem('trust-fall-seat');if(saved)setSession(JSON.parse(saved));}catch{}const c=new URLSearchParams(location.search).get('room');if(c)setCode(c.toUpperCase());},[]);
+ useEffect(()=>{const t=setInterval(()=>setNow(Date.now()),250);return()=>clearInterval(t);},[]);
+ function accept(r:PublicRoom){offset.current=r.serverNow-Date.now();setRoom(r);setOffline(false);}
+ useEffect(()=>{
+  if(!session)return;let active=true;let timer:ReturnType<typeof setTimeout>;
+  async function poll(){const version=generation.current;try{const r=await requestGame('poll',session);if(active&&version===generation.current)accept(r);}catch(e){if(active){setOffline(true);setError(e instanceof Error?e.message:'Reconnecting…');}}finally{if(active)timer=setTimeout(poll,900);}}
+  poll();return()=>{active=false;clearTimeout(timer);};
+ },[session]);
+ useEffect(()=>{(window as unknown as {render_game_to_text:()=>string}).render_game_to_text=()=>JSON.stringify(room?{phase:room.phase,room:room.code,you:room.you,round:room.round,players:room.players,pairs:room.pairs,myChoice:room.myChoice,results:room.results}: {phase:'join'});},[room]);
+ async function action(action:string,payload:Record<string,unknown>={}){setBusy(true);setError('');generation.current++;try{const data=await requestGame(action,session,payload);if(data.token){const seat={code:data.room.code,token:data.token};sessionStorage.setItem('trust-fall-seat',JSON.stringify(seat));setSession(seat);history.replaceState(null,'',`?room=${seat.code}`);}accept(data.room);return true;}catch(e){setError(e instanceof Error?e.message:'Try again.');return false;}finally{setBusy(false);generation.current++;}}
+ async function leave(){if(await action('leave')){sessionStorage.removeItem('trust-fall-seat');setSession(null);setRoom(null);history.replaceState(null,'',location.pathname);}}
+ const seconds=room?Math.max(0,Math.ceil((room.deadline-(now+offset.current))/1000)):0;
+ return <main className="game-shell"><header><a className="brand" href="/" onClick={e=>{if(room)e.preventDefault();}}>TRUST <i>/</i> FALL</a><div className="room-meta">{room&&<><button className="room-code" onClick={async()=>{try{await navigator.clipboard.writeText(`${location.origin}/?room=${room.code}`);setCopied(true);setTimeout(()=>setCopied(false),2000);}catch{setError(`Share room code ${room.code}`);}}} aria-label="Copy invitation link">Room <strong>{room.code}</strong><Copy size={14}/></button><span>{copied?'Link copied':room.phase==='lobby'?'Waiting room':`Round ${room.round} of 5`}</span></>}</div><button className="help" onClick={()=>setRules(true)}><CircleHelp size={18}/><span>How to play</span></button>{room&&(room.phase==='lobby'||room.phase==='finished')&&<button className="leave" onClick={leave} aria-label="Leave table" disabled={busy}><LogOut size={18}/></button>}</header>
+ {error&&<div className="error" role="alert">{error}{offline&&<span> · Reconnecting automatically</span>}<button onClick={()=>setError('')} aria-label="Dismiss message">×</button></div>}
+ {!room?<section className="entry"><div className="entry-art"/><div className="entry-copy"><span className="eyebrow">A GAME OF ALLIANCES & BETRAYAL</span><h1>Trust has<br/>a price.</h1><p>Make a promise. Choose in secret.<br/>Leave with the most points.</p><form onSubmit={e=>{e.preventDefault();action('create',{name});}}><label htmlFor="player-name">YOUR NAME</label><input style={{minWidth:0}} id="player-name" placeholder="Choose your name" maxLength={18} autoComplete="nickname" value={name} onChange={e=>setName(e.target.value)} required/><button className="primary" disabled={busy||!name.trim()}>{busy?'Connecting…':'Create a table'}</button></form><div className="join-divider">OR JOIN YOUR FRIENDS</div><form className="join-form" onSubmit={e=>{e.preventDefault();action('join',{name,code});}}><input style={{minWidth:0}} aria-label="Room code" placeholder="ROOM CODE" maxLength={5} value={code} onChange={e=>setCode(e.target.value.toUpperCase())} required/><button className="secondary" disabled={busy||!name.trim()||code.length!==5}>Join table</button></form><p className="entry-note">2–6 players · 5 rounds · No account needed</p>{session&&<button className="text-button" onClick={()=>{sessionStorage.removeItem('trust-fall-seat');setSession(null);setError('');}}>Use a different seat</button>}</div></section>:<div className="play-layout"><Table key={`${room.phase}-${room.round}`} room={room} seconds={seconds} busy={busy} act={action}/><Chat messages={room.messages} busy={busy} send={text=>action('chat',{text})}/></div>}
+ <footer><span>PEOPLE LIE. ALLIANCES SHIFT.</span><span>POINTS ONLY. REPUTATIONS AT STAKE.</span></footer>{rules&&<Rules close={()=>setRules(false)}/>}</main>
+}
