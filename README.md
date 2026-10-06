@@ -56,6 +56,6 @@ Art was generated with built-in imagegen from the approved concept: a charcoal u
 
 ## Source and assets
 
-Source repository: https://github.com/wuisabel-gif/trust-fall (private).
+Source repository: https://github.com/wuisabel-gif/trust-fall (public).
 
 Player seats use a dedicated transparent portrait strip. See `docs/art-assets.md` for asset paths and generation details. Changes are committed in small focused steps.
