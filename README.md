@@ -10,7 +10,7 @@ The GitHub Pages link opens the live game. Multiplayer state and scoring run on 
 
 ### 1. Enter your name
 
-Create a new table or join a friend’s table. No login or installation is required.
+Choose one of eight character portraits, enter your name, then create a new table or join a friend’s table. No login or installation is required.
 
 ![Game entry screen](docs/screenshots/01-entry.png)
 
@@ -25,6 +25,10 @@ Enter your name and the host’s five-character room code, then click **Join tab
 Players on separate devices appear at the same table. Everyone clicks **I’m ready**, then the host clicks **Start game**.
 
 ![Two players successfully joined the same room](docs/screenshots/03-room-lobby.png)
+
+You can also click **Change character** in the waiting room. Saving a new look updates it for everyone and resets your ready status.
+
+![Choosing a character in the waiting room](docs/screenshots/05-character-picker.png)
 
 ### 4. Negotiate and choose in secret
 
