@@ -1,5 +1,6 @@
+import { characterIndex } from './characters';
 export type Choice = 'cooperate' | 'betray';
-export type Player = { id:string; token:string; name:string; score:number; ready:boolean; lastChat:number };
+export type Player = { id:string; token:string; name:string; avatar?:number; score:number; ready:boolean; lastChat:number };
 export type Message = { id:string; name:string; text:string; at:number };
 export type Result = { id:string; partner:string|null; choice:Choice|null; otherChoice:Choice|null; gain:number };
 export type Room = { code:string; host:string; players:Player[]; phase:'lobby'|'negotiation'|'reveal'|'finished'; round:number; deadline:number; choices:Record<string,Choice>; pairs:string[][]; results:Result[]; messages:Message[]; history:{ round:number; results:Result[] }[]; created:number };
@@ -31,11 +32,12 @@ export function tick(r:Room,now:number) {
   if(r.phase==='reveal' && now>=r.deadline) {if(r.round===5){r.phase='finished';r.deadline=0;}else beginRound(r,now);}
 }
 export function view(r:Room,id:string,now:number) {
-  return {...r, players:r.players.map(({token,lastChat,...p})=>({...p,locked:!!r.choices[p.id]})), choices:undefined, myChoice:r.choices[id]??null, you:id, serverNow:now};
+  return {...r, players:r.players.map(({token,lastChat,...p},index)=>({...p,avatar:p.avatar??index%4,locked:!!r.choices[p.id]})), choices:undefined, myChoice:r.choices[id]??null, you:id, serverNow:now};
 }
 export function act(r:Room,id:string,action:string,payload:Record<string,unknown>,now:number) {
   const p=r.players.find(x=>x.id===id); if(!p) throw Error('Your seat is no longer available. Join again.');
   if(action==='ready'&&r.phase==='lobby') p.ready=!p.ready;
+  else if(action==='avatar') {if(r.phase!=='lobby')throw Error('Change your character in the waiting room.');p.avatar=characterIndex(payload.avatar);p.ready=false;}
   else if(action==='start') {if(id!==r.host)throw Error('Only the host can start.'); if(r.phase!=='lobby'||r.players.length<2||!r.players.every(x=>x.ready))throw Error('At least two players must be ready.'); beginRound(r,now);}
   else if(action==='choice') {
     if(r.phase!=='negotiation')throw Error('This round is closed.');
