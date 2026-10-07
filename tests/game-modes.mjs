@@ -7,6 +7,7 @@ const root=path.resolve('lib/game'),out=fs.mkdtempSync(path.join(os.tmpdir(),'tr
 function compile(dir){for(const entry of fs.readdirSync(dir,{withFileTypes:true})){const source=path.join(dir,entry.name);if(entry.isDirectory()){compile(source);continue;}if(!source.endsWith('.ts')||source.endsWith('client.ts'))continue;const target=path.join(out,path.relative(root,source).replace(/\.ts$/,'.mjs'));fs.mkdirSync(path.dirname(target),{recursive:true});const js=ts.transpileModule(fs.readFileSync(source,'utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText.replace(/from '(\.[^']+)'/g,"from '$1.mjs'");fs.writeFileSync(target,js);}}
 compile(root);
 const {act,tick,view,beginRound,reveal}=await import(path.join(out,'engine.mjs'));
+const {roundPresentation,finalPresentation}=await import(path.join(out,'presentation.mjs'));
 const {modeChoice}=await import(path.join(out,'bots.mjs'));
 const {MODES}=await import(path.join(out,'modes/catalog.mjs'));
 const {optionsFor,needsChoice,pokerValue}=await import(path.join(out,'modes/runtime.mjs'));
@@ -50,4 +51,21 @@ assert.deepEqual(resolve('selection',['1','2']).results.map(x=>x.gain),[-20,20])
 const royal=[8,9,10,11,12],four=[0,13,26,39,1],full=[0,13,26,1,14];assert.ok(pokerValue(royal)>pokerValue(four));assert.ok(pokerValue(four)>pokerValue(full));
 const skipped=room(2);beginRound(skipped,1000);skipped.choices.p1='cooperate';reveal(skipped,46000);assert.deepEqual(skipped.results.map(x=>x.gain),[-10,10]);
 assert.throws(()=>act(room(3),'p0','mode',{mode:'not-a-mode'},1000));
+
+const result=(choice,otherChoice,gain,detail='resolved')=>({id:'p0',partner:'p1',choice,otherChoice,gain,detail});
+assert.equal(roundPresentation('trust',result('cooperate','cooperate',30),[]).title,'PACT HONORED');
+assert.equal(roundPresentation('trust',result('cooperate','betray',0),[]).tone,'betrayal');
+assert.equal(roundPresentation('trust',result('betray','cooperate',50),[]).title,'THE PERFECT BLUFF');
+assert.equal(roundPresentation('trust',result('betray','betray',5),[]).title,'DOUBLE CROSS');
+assert.equal(roundPresentation('trust',result(null,null,-10,'Timed out · no move'),[]).tone,'setback');
+assert.equal(roundPresentation('trust',result(null,null,0,'Observer'),[]).title,'WATCH & LEARN');
+assert.equal(roundPresentation('kingdoms',result('defend',null,0),[]).title,'MOVE RESOLVED');
+assert.equal(roundPresentation('minority',result('0',null,0),[]).tone,'setback');
+assert.equal(roundPresentation('auction',result('0',null,0),[]).title,'BID REVEALED');
+assert.equal(finalPresentation({score:30,eligible:true},[{score:30,id:'p0'}],'p0').title,'VICTORY');
+assert.equal(finalPresentation({score:30,eligible:true},[{score:30,id:'p0'},{score:30,id:'p1'}],'p0').title,'VICTORY SHARED');
+assert.equal(finalPresentation({score:0,eligible:false},[{score:30,id:'p1'}],'p0').title,'NO MOVES, NO CROWN');
+assert.equal(finalPresentation({score:0,eligible:true},[{score:30,id:'p1'}],'p0').tone,'setback');
+assert.equal(finalPresentation({score:-50,eligible:false},[],'p0').title,'NO CONTEST');
+
 fs.rmSync(out,{recursive:true,force:true});console.log(`PASS ${MODES.length} modes and payoff / timeout boundary checks.`);
