@@ -1,5 +1,7 @@
 # TRUST / FALL
 
+**English** | [简体中文](README.zh-CN.md)
+
 A collection of 22 browser social strategy games for 2–6 seats. Negotiate, submit secret moves, reveal together, and compete across 3, 5 or 7 rounds. Share the public link and a five-character room code. Players do not need an account.
 
 ## Play the game
