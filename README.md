@@ -1,6 +1,6 @@
 # TRUST / FALL
 
-A browser game for 2–6 players: negotiate, cooperate or betray, reveal choices, and compete for points across five rounds. Share the public link and a five-character room code. Players do not need an account.
+A collection of 22 browser social strategy games for 2–6 seats. Negotiate, submit secret moves, reveal together, and compete across five rounds. Share the public link and a five-character room code. Players do not need an account.
 
 ## Play the game
 
@@ -22,7 +22,7 @@ Enter your name and the host’s five-character room code, then click **Join tab
 
 ### 3. Meet in the waiting room
 
-Players on separate devices appear at the same table. Everyone clicks **I’m ready**, then the host clicks **Start game**.
+Players on separate devices appear at the same table. The host chooses a game in the lobby. Everyone clicks **I’m ready**, then the host clicks **Start game**.
 
 ![Two players successfully joined the same room](docs/screenshots/03-room-lobby.png)
 
@@ -32,24 +32,30 @@ You can also click **Change character** in the waiting room. Saving a new look u
 
 ### 4. Negotiate and choose in secret
 
-Chat, make promises, and lock in **Cooperate** or **Betray**. Choices reveal together and the server updates everyone’s scores.
+Chat, make promises, and lock in a mode-specific move (for example, **Cooperate** or **Betray** in the original mode). Choices reveal together and the server updates everyone’s scores.
 
 ![Live multiplayer gameplay with shared chat and secret choices](docs/screenshots/04-gameplay.png)
 
-These screenshots were captured from the actual deployed game using two separate browser sessions. The pictured room is an example; create a fresh table to play.
+These screenshots show real browser sessions. The pictured rooms are examples; create a fresh table to play.
+
+## Game collection
+
+The lobby offers 22 modes, each with in-game instructions, secret choices, server scoring and AI seats. See [mode adaptations](docs/game-modes.md) for scope and rules. These are short independent adaptations, not a reproduction of the manga tournament. Modes with absent source rules (such as Mask Exchange) are explicitly original designs.
+
+![Game collection lobby](docs/screenshots/07-game-collection.png)
 
 ## Game flow
 
 Create or join → everyone ready → host starts → 45-second negotiation → secret locked choices → reveal → 12-second intermission → next round → winner → host opens rematch.
 
-Pairings rotate. Odd-player rounds award the observer 15 points. Unsubmitted choices default to cooperation. Both cooperate earns 30 each; unilateral betrayal earns 50 versus 0; mutual betrayal earns 5 each. Tied leaders share the win.
+In Trust / Fall, pairings rotate and unpaired observers earn 0. In every mode, unsubmitted moves time out for −10 points, never an automatic move. Players who never submit a move cannot win. Both cooperate earns 30 each; unilateral betrayal earns 50 versus 0; mutual betrayal earns 5 each. Tied leaders share the win.
 
 ## Solo practice with AI
 
-You do not need six people. Two seats are enough, and you can practice alone:
+You do not need six people. Modes need two or three seats, including bots; you can practice alone:
 
 1. Create a table.
-2. Click **Add AI player** for one opponent, or **Fill empty seats with AI** for a full table.
+2. Choose a game, then click **Add AI player** for one opponent, or **Fill empty seats with AI** for a full table.
 3. Click **I’m ready**, then **Start game**.
 
 AI seats are clearly marked and are ready automatically. The host can remove them in the waiting room. You can mix real friends and AI in the same room.
@@ -66,11 +72,11 @@ The server owns the room state, timer, pairing, choices, and scores. Browsers po
 
 ## Development
 
-Install dependencies, run `npm run db:generate` after schema changes, and apply the generated migration to local D1 before using `npm run dev`. `npx tsc --noEmit` checks types. Sites packaging applies committed migrations to production.
+Install dependencies, run `npm run db:generate` after schema changes, and apply the generated migration to local D1 before using `npm run dev`. `npx tsc --noEmit --incremental false` checks types. `npm run test:game` tests all modes, legal moves, AI, private state, timeouts, scoring and rematches. Sites packaging applies committed migrations to production.
 
 ## Validation
 
-Tested two isolated browser contexts (desktop 1536×1024 and mobile 390×844), synchronized chat, private choice visibility, lock immutability, scoring, reload recovery, five rounds, winning, rematch, rules, and mobile overflow. Engine checks cover 2–6 player pairing, all payoff combinations, timeout defaults, and host restrictions. Physical devices and large concurrent audiences have not been load-tested.
+Tested two isolated browser contexts (desktop 1536×1024 and mobile 390×844), synchronized chat, private choice visibility, lock immutability, scoring, reload recovery, five rounds, winning, rematch, rules, and mobile overflow. Engine checks cover 2–6 player pairing, all payoff combinations, timeout penalties, and host restrictions. Physical devices and large concurrent audiences have not been load-tested.
 
 Art was generated with built-in imagegen from the approved concept: a charcoal underground tournament room with four original adult anime competitors, dark round table, muted crimson banners, gold rim lighting, and no text or interface. Asset: `public/tournament-room.png`.
 
