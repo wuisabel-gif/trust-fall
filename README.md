@@ -44,6 +44,20 @@ Create or join → everyone ready → host starts → 45-second negotiation → 
 
 Pairings rotate. Odd-player rounds award the observer 15 points. Unsubmitted choices default to cooperation. Both cooperate earns 30 each; unilateral betrayal earns 50 versus 0; mutual betrayal earns 5 each. Tied leaders share the win.
 
+## Solo practice with AI
+
+You do not need six people. Two seats are enough, and you can practice alone:
+
+1. Create a table.
+2. Click **Add AI player** for one opponent, or **Fill empty seats with AI** for a full table.
+3. Click **I’m ready**, then **Start game**.
+
+AI seats are clearly marked and are ready automatically. The host can remove them in the waiting room. You can mix real friends and AI in the same room.
+
+These are built-in strategy bots with different bluffing styles. They use past reveals, make timed secret choices, and send preset table-talk messages. They cannot inspect current human choices. No external AI API or key is needed.
+
+![Solo practice with five AI opponents](docs/screenshots/06-ai-practice.png)
+
 ## Architecture
 
 React/Vinext client → same-origin game API → Cloudflare D1.
