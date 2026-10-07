@@ -1,6 +1,6 @@
 import { characterIndex } from '../../../lib/game/characters';
 import { env } from 'cloudflare:workers';
-import { act, tick, view, type Room } from '../../../lib/game/engine';
+import { act, tick, view, joinParticipant, type Room } from '../../../lib/game/engine';
 const headers={'Cache-Control':'no-store'};
 function db(){if(!env.DB)throw Error('The game server is unavailable. Please try again.');return env.DB;}
 function nameOf(value:unknown){const name=typeof value==='string'?value.trim().slice(0,18):'';if(!name)throw Error('Enter your player name.');return name;}
@@ -12,8 +12,8 @@ async function update(code:string, token:string, operation:(r:Room,id:string,now
     if(!row)throw Error('Room not found. Check the code.');
     const r=JSON.parse(row.state) as Room,now=Date.now();
     if(now-r.created>86400000)throw Error('This room has expired. Create a new table.');
-    let player=r.players.find(p=>p.token===token);
-    if(joinName&&!player){if(r.phase!=='lobby')throw Error('This match has started. Join when the host opens a rematch.');if(r.players.length>=6)throw Error('This table is full.');if(r.players.some(p=>p.name.toLowerCase()===joinName.toLowerCase()))throw Error('That name is taken at this table.');player={id:crypto.randomUUID(),token,name:joinName,avatar:joinAvatar,score:0,ready:false,lastChat:0};r.players.push(player);if(!r.host)r.host=player.id;}
+    let player=[...r.players,...(r.spectators??[])].find(p=>p.token===token);
+    if(joinName&&!player)player=joinParticipant(r,token,joinName,joinAvatar);
     if(!player)throw Error('Your seat could not be verified. Join the room again.');
     const before=row.state;tick(r,now);operation(r,player.id,now);
     if(JSON.stringify(r)===before)return view(r,player.id,now);

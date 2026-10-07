@@ -3,8 +3,9 @@ import { useEffect, useRef, useState } from 'react';
 import type { Message } from '../../lib/game/engine';
 
 type ChatPlayer = { id: string; name: string; isBot: boolean };
-export function Chat({ messages, players, you, negotiating, send, busy }: {
+export function Chat({ messages, players, you, negotiating, send, busy, readOnly = false }: {
     messages: Message[];
+    readOnly?: boolean;
     players: ChatPlayer[];
     you: string;
     negotiating: boolean;
@@ -30,16 +31,16 @@ export function Chat({ messages, players, you, negotiating, send, busy }: {
             <div ref={end}/>
         </div>
         <div className="chat-audience">
-            <label htmlFor="chat-recipient">Send to</label>
-            <select id="chat-recipient" value={recipient} onChange={e => setRecipient(e.target.value)}>
+            <label htmlFor="chat-recipient">{readOnly ? 'Watching' : 'Send to'}</label>
+            <select id="chat-recipient" disabled={readOnly} value={recipient} onChange={e => setRecipient(e.target.value)}>
                 <option value="">Everyone</option>
                 {players.filter(p => p.id !== you).map(p => <option key={p.id} value={p.id} disabled={!negotiating}>{p.name}{p.isBot ? ' · AI' : ''} (private)</option>)}
             </select>
             <small>{whisperClosed ? 'Whispers reopen next negotiation. Draft kept private.' : recipient ? 'Only you and this player can see it. AI seats do not reply.' : 'Visible to everyone at the table.'}</small>
         </div>
-        <form onSubmit={async e => { e.preventDefault(); if (!whisperClosed && await send(text, recipient || undefined)) setText(''); }}>
-            <input suppressHydrationWarning aria-label="Table chat message" placeholder={recipient ? 'Whisper…' : 'Type a message…'} maxLength={280} value={text} onChange={e => setText(e.target.value)}/>
-            <button aria-label="Send message" disabled={busy || !text.trim() || whisperClosed}><Send size={20}/></button>
+        <form onSubmit={async e => { e.preventDefault(); if (!readOnly && !whisperClosed && await send(text, recipient || undefined)) setText(''); }}>
+            <input suppressHydrationWarning aria-label="Table chat message" disabled={readOnly} placeholder={recipient ? 'Whisper…' : 'Type a message…'} maxLength={280} value={text} onChange={e => setText(e.target.value)}/>
+            <button aria-label="Send message" disabled={readOnly || busy || !text.trim() || whisperClosed}><Send size={20}/></button>
         </form>
     </aside>;
 }

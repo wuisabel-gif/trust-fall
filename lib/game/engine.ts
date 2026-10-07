@@ -40,6 +40,7 @@ export type Room = {
     code: string;
     host: string;
     players: Player[];
+    spectators?: Player[];
     phase: 'lobby' | 'negotiation' | 'reveal' | 'finished';
     round: number;
     deadline: number;
@@ -92,10 +93,23 @@ export function tick(r: Room, now: number) {
     }
 }
 export function view(r: Room, id: string, now: number) {
-    const { roundSeed, deck, choices, ...publicState } = r;
-    return { ...publicState, settings: settingsOf(r), messages: r.messages.filter(m => !m.recipientId || m.senderId === id || m.recipientId === id), mode: modeOf(r.mode).id, choiceOptions: r.phase === 'negotiation' ? optionsFor(r, id) : [], roundInfo: r.phase === 'negotiation' ? roundDetails(r, id) : '', canChoose: r.phase === 'negotiation' && needsChoice(r, id), players: r.players.map(({ token, lastChat, botStyle, ...p }, index) => ({ ...p, avatar: p.avatar ?? index % 4, isBot: !!p.isBot, eligible: r.history.some(h => h.results.some(x => x.id === p.id && x.choice !== null)), locked: r.choices[p.id] !== undefined })), choices: undefined, myChoice: r.choices[id] ?? null, you: id, serverNow: now };
+    const { roundSeed, deck, choices, spectators, ...publicState } = r;
+    const seated = r.players.some(p => p.id === id);
+    return { ...publicState, isSpectator: !seated, spectators: (spectators ?? []).map(({id, name, avatar}) => ({id, name, avatar})), settings: settingsOf(r), messages: r.messages.filter(m => !m.recipientId || m.senderId === id || m.recipientId === id), mode: modeOf(r.mode).id, choiceOptions: r.phase === 'negotiation' && seated ? optionsFor(r, id) : [], roundInfo: r.phase === 'negotiation' && seated ? roundDetails(r, id) : '', canChoose: seated && r.phase === 'negotiation' && needsChoice(r, id), players: r.players.map(({ token, lastChat, botStyle, ...p }, index) => ({ ...p, avatar: p.avatar ?? index % 4, isBot: !!p.isBot, eligible: r.history.some(h => h.results.some(x => x.id === p.id && x.choice !== null)), locked: r.choices[p.id] !== undefined })), choices: undefined, myChoice: r.choices[id] ?? null, you: id, serverNow: now };
 }
 export function act(r: Room, id: string, action: string, payload: Record<string, unknown>, now: number) {
+    const spectator = r.spectators?.find(x => x.id === id);
+    if (spectator) {
+        if (action === 'leave') {
+            r.spectators = r.spectators!.filter(p => p.id !== id);
+            return;
+        }
+        if (action === 'takeSeat' && r.phase === 'lobby') {
+            seatSpectator(r, spectator);
+            return;
+        }
+        throw Error('You are watching this match. Take a seat in the lobby to play.');
+    }
     const p = r.players.find(x => x.id === id);
     if (!p)
         throw Error('Your seat is no longer available. Join again.');
@@ -194,6 +208,10 @@ export function act(r: Room, id: string, action: string, payload: Record<string,
         r.results = [];
         r.history = [];
         r.pairs = [];
+        for (const spectator of [...(r.spectators ?? [])]) {
+            if (r.players.length >= 6 && !r.players.some(p => p.isBot)) break;
+            seatSpectator(r, spectator);
+        }
         for (const player of r.players) {
             player.score = 0;
             player.ready = !!player.isBot;
@@ -208,4 +226,32 @@ export function act(r: Room, id: string, action: string, payload: Record<string,
     }
     else
         throw Error('That action is unavailable right now.');
+}
+
+// Spectators never enter the mode engine until an explicit lobby transition.
+export function seatSpectator(r: Room, spectator: Player) {
+    if (r.players.length >= 6) {
+        const bot = r.players.find(p => p.isBot);
+        if (!bot) throw Error('All six seats are occupied. Wait for a player to leave.');
+        r.players = r.players.filter(p => p.id !== bot.id);
+    }
+    r.spectators = (r.spectators ?? []).filter(p => p.id !== spectator.id);
+    r.players.push({ ...spectator, score: 0, ready: false });
+    if (!r.host) r.host = spectator.id;
+    for (const p of r.players) p.ready = !!p.isBot;
+}
+export function joinParticipant(r: Room, token: string, name: string, avatar: number): Player {
+    const everyone = [...r.players, ...(r.spectators ?? [])];
+    const existing = everyone.find(p => p.token === token);
+    if (existing) return existing;
+    if (everyone.some(p => p.name.toLowerCase() === name.toLowerCase())) throw Error('That name is taken at this table.');
+    const player: Player = { id: crypto.randomUUID(), token, name, avatar, score: 0, ready: false, lastChat: 0 };
+    if (r.phase === 'lobby' && r.players.length < 6) {
+        r.players.push(player);
+        if (!r.host) r.host = player.id;
+    } else {
+        if ((r.spectators?.length ?? 0) >= 20) throw Error('The spectator gallery is full. Try another table.');
+        (r.spectators ??= []).push(player);
+    }
+    return player;
 }

@@ -1,6 +1,8 @@
 import type { Room, Choice } from './engine';
-export type PublicRoom = Omit<Room, 'players' | 'choices' | 'roundSeed' | 'deck'> & {
+export type PublicRoom = Omit<Room, 'players' | 'choices' | 'roundSeed' | 'deck' | 'spectators'> & {
     mode: string;
+    isSpectator: boolean;
+    spectators: {id: string; name: string; avatar?: number}[];
     choiceOptions: {
         value: string;
         label: string;

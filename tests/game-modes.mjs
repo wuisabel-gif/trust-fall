@@ -100,3 +100,20 @@ for(const mode of MODES)for(const rounds of [3,5,7]){
  if(mode.id==='auction')assert.ok(r.results.some(r=>r.gain>0),'auction payout at selected final round');
 }
 console.log('PASS custom match lengths across all 22 modes and host-only settings');
+
+const {joinParticipant}=await import(path.join(out,'engine.mjs'));
+const {matchAwards}=await import(path.join(out,'history.mjs'));
+const spectated=room(2);beginRound(spectated,1000);
+act(spectated,'p0','chat',{text:'Not for spectators',recipientId:'p1'},2000);
+const guest=joinParticipant(spectated,'guest-token','Guest',3);
+const spectatorView=view(spectated,guest.id,2001);
+assert.equal(spectatorView.isSpectator,true);assert.equal(spectatorView.canChoose,false);assert.deepEqual(spectatorView.choiceOptions,[]);assert.equal(spectatorView.roundInfo,'');
+assert.equal(JSON.stringify(spectatorView).includes('guest-token'),false);assert.equal(JSON.stringify(spectatorView).includes('Not for spectators'),false);
+for(const action of ['ready','choice','chat','mode','addBot','settings','start','rematch','takeSeat'])assert.throws(()=>act(spectated,guest.id,action,{choice:'betray',text:'spoiler'},3000));
+assert.equal(spectated.players.length,2);reveal(spectated,5000);assert.equal(spectated.results.length,2);
+spectated.phase='finished';act(spectated,'p0','rematch',{},6000);assert.equal(spectated.players.length,3);assert.equal(view(spectated,guest.id,6000).isSpectator,false);assert.equal(spectated.players.at(-1).ready,false);
+const fullTable=room(5);act(fullTable,'p0','addBot',{},1000);beginRound(fullTable,1000);
+const waiting=joinParticipant(fullTable,'waiting-token','Waiting',0);fullTable.phase='finished';act(fullTable,'p0','rematch',{},2000);assert.equal(fullTable.players.length,6);assert.equal(fullTable.players.some(p=>p.isBot),false);assert.equal(fullTable.players.at(-1).id,waiting.id);
+const overflow=joinParticipant(fullTable,'overflow-token','Overflow',0);assert.throws(()=>act(fullTable,overflow.id,'takeSeat',{},3000));act(fullTable,'p1','leave',{},3000);act(fullTable,overflow.id,'takeSeat',{},4000);assert.equal(fullTable.players.length,6);
+const awardRoom=resolve('trust',['cooperate','betray']);assert.equal(matchAwards(awardRoom).find(a=>a.title==='Most betrayals').names,'Player 1');assert.equal(matchAwards(awardRoom).find(a=>a.title==='Most trusting').names,'Player 0');
+console.log('PASS spectators cannot act or see whispers; rematch seating, fullTable-table waitlist and awards');
