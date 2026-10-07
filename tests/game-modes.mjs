@@ -116,6 +116,6 @@ const fullTable=room(5);act(fullTable,'p0','addBot',{},1000);beginRound(fullTabl
 const waiting=joinParticipant(fullTable,'waiting-token','Waiting',0);fullTable.phase='finished';act(fullTable,'p0','rematch',{},2000);assert.equal(fullTable.players.length,6);assert.equal(fullTable.players.some(p=>p.isBot),false);assert.equal(fullTable.players.at(-1).id,waiting.id);
 const overflow=joinParticipant(fullTable,'overflow-token','Overflow',0);assert.throws(()=>act(fullTable,overflow.id,'takeSeat',{},3000));act(fullTable,'p1','leave',{},3000);act(fullTable,overflow.id,'takeSeat',{},4000);assert.equal(fullTable.players.length,6);
 const awardRoom=resolve('trust',['cooperate','betray']);assert.equal(matchAwards(awardRoom).find(a=>a.title==='Most betrayals').names,'Player 1');assert.equal(matchAwards(awardRoom).find(a=>a.title==='Most trusting').names,'Player 0');
-console.log('PASS spectators cannot act or see whispers; rematch seating, fullTable-table waitlist and awards');
+console.log('PASS spectators cannot act or see whispers; rematch seating, full-table waitlist and awards');
 
 fs.rmSync(out,{recursive:true,force:true});
