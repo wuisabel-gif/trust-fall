@@ -1,5 +1,5 @@
 import type { Room, Choice } from './engine';
-export type PublicRoom = Omit<Room,'players'|'choices'> & {players:{id:string;name:string;avatar:number;score:number;ready:boolean;locked:boolean}[];you:string;serverNow:number;myChoice:Choice|null};
+export type PublicRoom = Omit<Room,'players'|'choices'> & {players:{id:string;name:string;avatar:number;isBot:boolean;score:number;ready:boolean;locked:boolean}[];you:string;serverNow:number;myChoice:Choice|null};
 export type Session = {code:string;token:string};
 export function requestGame(action:"poll",session:Session|null,payload?:Record<string,unknown>):Promise<PublicRoom>;
 export function requestGame(action:string,session:Session|null,payload?:Record<string,unknown>):Promise<{room:PublicRoom;token?:string}>;

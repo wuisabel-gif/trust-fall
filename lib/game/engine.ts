@@ -1,6 +1,7 @@
+import { addBot, playBots, type BotStyle } from './bots';
 import { characterIndex } from './characters';
 export type Choice = 'cooperate' | 'betray';
-export type Player = { id:string; token:string; name:string; avatar?:number; score:number; ready:boolean; lastChat:number };
+export type Player = { id:string; token:string; name:string; avatar?:number; isBot?:boolean; botStyle?:BotStyle; score:number; ready:boolean; lastChat:number };
 export type Message = { id:string; name:string; text:string; at:number };
 export type Result = { id:string; partner:string|null; choice:Choice|null; otherChoice:Choice|null; gain:number };
 export type Room = { code:string; host:string; players:Player[]; phase:'lobby'|'negotiation'|'reveal'|'finished'; round:number; deadline:number; choices:Record<string,Choice>; pairs:string[][]; results:Result[]; messages:Message[]; history:{ round:number; results:Result[] }[]; created:number };
@@ -28,15 +29,26 @@ export function reveal(r:Room,now:number) {
   r.history.push({round:r.round,results:r.results}); r.phase='reveal'; r.deadline=now+12000;
 }
 export function tick(r:Room,now:number) {
-  if(r.phase==='negotiation' && now>=r.deadline) reveal(r,now);
+  if(r.phase==='negotiation') {
+    playBots(r,now);
+    if(now>=r.deadline || r.pairs.filter(pair=>pair.length===2).flat().every(id=>r.choices[id])) reveal(r,now);
+  }
   if(r.phase==='reveal' && now>=r.deadline) {if(r.round===5){r.phase='finished';r.deadline=0;}else beginRound(r,now);}
 }
 export function view(r:Room,id:string,now:number) {
-  return {...r, players:r.players.map(({token,lastChat,...p},index)=>({...p,avatar:p.avatar??index%4,locked:!!r.choices[p.id]})), choices:undefined, myChoice:r.choices[id]??null, you:id, serverNow:now};
+  return {...r, players:r.players.map(({token,lastChat,botStyle,...p},index)=>({...p,avatar:p.avatar??index%4,isBot:!!p.isBot,locked:!!r.choices[p.id]})), choices:undefined, myChoice:r.choices[id]??null, you:id, serverNow:now};
 }
 export function act(r:Room,id:string,action:string,payload:Record<string,unknown>,now:number) {
   const p=r.players.find(x=>x.id===id); if(!p) throw Error('Your seat is no longer available. Join again.');
+  if(p.isBot) throw Error('AI seats are controlled by the game server.');
   if(action==='ready'&&r.phase==='lobby') p.ready=!p.ready;
+  else if(action==='addBot'||action==='fillBots'||action==='removeBot') {
+    if(id!==r.host||r.phase!=='lobby')throw Error('Only the host can change AI seats in the waiting room.');
+    if(action==='removeBot') {
+      if(!r.players.some(player=>player.id===payload.playerId&&player.isBot))throw Error('That AI seat is unavailable.');
+      r.players=r.players.filter(player=>player.id!==payload.playerId);
+    } else if(action==='fillBots') {while(r.players.length<6)addBot(r);} else addBot(r);
+  }
   else if(action==='avatar') {if(r.phase!=='lobby')throw Error('Change your character in the waiting room.');p.avatar=characterIndex(payload.avatar);p.ready=false;}
   else if(action==='start') {if(id!==r.host)throw Error('Only the host can start.'); if(r.phase!=='lobby'||r.players.length<2||!r.players.every(x=>x.ready))throw Error('At least two players must be ready.'); beginRound(r,now);}
   else if(action==='choice') {
@@ -52,9 +64,9 @@ export function act(r:Room,id:string,action:string,payload:Record<string,unknown
     p.lastChat=now; r.messages.push({id:crypto.randomUUID(),name:p.name,text:message,at:now}); r.messages=r.messages.slice(-60);
   } else if(action==='rematch') {
     if(id!==r.host||r.phase!=='finished')throw Error('The host can open a rematch after the game.');
-    r.phase='lobby';r.round=0;r.deadline=0;r.choices={};r.results=[];r.history=[];r.pairs=[]; for(const player of r.players){player.score=0;player.ready=false;}
+    r.phase='lobby';r.round=0;r.deadline=0;r.choices={};r.results=[];r.history=[];r.pairs=[]; for(const player of r.players){player.score=0;player.ready=!!player.isBot;}
   } else if(action==='leave') {
     if(r.phase!=='lobby'&&r.phase!=='finished')throw Error('Keep your seat until the match ends.');
-    r.players=r.players.filter(x=>x.id!==id); if(r.host===id)r.host=r.players[0]?.id??'';
+    r.players=r.players.filter(x=>x.id!==id); if(r.host===id)r.host=r.players.find(player=>!player.isBot)?.id??'';
   } else throw Error('That action is unavailable right now.');
 }
