@@ -15,6 +15,8 @@ export type Player = {
     lastChat: number;
 };
 export type Message = {
+    senderId?: string;
+    recipientId?: string;
     id: string;
     name: string;
     text: string;
@@ -89,7 +91,7 @@ export function tick(r: Room, now: number) {
 }
 export function view(r: Room, id: string, now: number) {
     const { roundSeed, deck, choices, ...publicState } = r;
-    return { ...publicState, mode: modeOf(r.mode).id, choiceOptions: r.phase === 'negotiation' ? optionsFor(r, id) : [], roundInfo: r.phase === 'negotiation' ? roundDetails(r, id) : '', canChoose: r.phase === 'negotiation' && needsChoice(r, id), players: r.players.map(({ token, lastChat, botStyle, ...p }, index) => ({ ...p, avatar: p.avatar ?? index % 4, isBot: !!p.isBot, eligible: r.history.some(h => h.results.some(x => x.id === p.id && x.choice !== null)), locked: r.choices[p.id] !== undefined })), choices: undefined, myChoice: r.choices[id] ?? null, you: id, serverNow: now };
+    return { ...publicState, messages: r.messages.filter(m => !m.recipientId || m.senderId === id || m.recipientId === id), mode: modeOf(r.mode).id, choiceOptions: r.phase === 'negotiation' ? optionsFor(r, id) : [], roundInfo: r.phase === 'negotiation' ? roundDetails(r, id) : '', canChoose: r.phase === 'negotiation' && needsChoice(r, id), players: r.players.map(({ token, lastChat, botStyle, ...p }, index) => ({ ...p, avatar: p.avatar ?? index % 4, isBot: !!p.isBot, eligible: r.history.some(h => h.results.some(x => x.id === p.id && x.choice !== null)), locked: r.choices[p.id] !== undefined })), choices: undefined, myChoice: r.choices[id] ?? null, you: id, serverNow: now };
 }
 export function act(r: Room, id: string, action: string, payload: Record<string, unknown>, now: number) {
     const p = r.players.find(x => x.id === id);
@@ -161,8 +163,13 @@ export function act(r: Room, id: string, action: string, payload: Record<string,
             throw Error('Write a message first.');
         if (now - p.lastChat < 800)
             throw Error('Wait a moment before sending again.');
+        const recipientId = typeof payload.recipientId === 'string' && payload.recipientId ? payload.recipientId : undefined;
+        if (recipientId) {
+            if (r.phase !== 'negotiation') throw Error('Whispers are available during negotiation only.');
+            if (recipientId === id || !r.players.some(player => player.id === recipientId)) throw Error('Choose another player to whisper to.');
+        }
         p.lastChat = now;
-        r.messages.push({ id: crypto.randomUUID(), name: p.name, text: message, at: now });
+        r.messages.push({ id: crypto.randomUUID(), senderId: id, recipientId, name: p.name, text: message, at: now });
         r.messages = r.messages.slice(-60);
     }
     else if (action === 'rematch') {
