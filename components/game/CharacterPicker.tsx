@@ -1,4 +1,6 @@
-import { CHARACTERS } from '../../lib/game/characters';
+import { modeOf } from '../../lib/game/modes/catalog';
+import { CHARACTERS, CHARACTER_PROFILES } from '../../lib/game/characters';
 export function CharacterPicker({value,onChange,disabled=false}:{value:number;onChange:(value:number)=>void;disabled?:boolean}) {
-  return <div className="character-picker" role="group" aria-label="Choose your character">{CHARACTERS.map((name,index)=><button key={name} type="button" className={`character-option ${value===index?'chosen':''}`} aria-label={`Choose ${name}`} aria-pressed={value===index} disabled={disabled} onClick={()=>onChange(index)}><span className={`character-image portrait-${index}`} aria-hidden="true"/><span>{name}</span></button>)}</div>;
+  const profile=CHARACTER_PROFILES[value];
+  return <><div className="character-picker" role="group" aria-label="Choose your character">{CHARACTERS.map((name,index)=><button key={name} type="button" className={`character-option ${value===index?'chosen':''}`} aria-label={`Choose ${name}`} aria-pressed={value===index} disabled={disabled} onClick={()=>onChange(index)}><span className={`character-image portrait-${index}`} aria-hidden="true"/><span>{name}</span></button>)}</div><section className="character-profile" aria-live="polite" aria-label={`${CHARACTERS[value]} character profile`}><h3>{CHARACTERS[value]}</h3><p>{profile.intro}</p><dl><div><dt>Strength</dt><dd>{profile.strength}</dd></div><div><dt>Weakness</dt><dd>{profile.weakness}</dd></div><div><dt>Best-fit games</dt><dd>{profile.games.map(id=>modeOf(id).name).join(' · ')}</dd></div></dl><p className="character-tip">{profile.tip}</p><small>Playstyle guide. Every character uses the same scoring rules.</small></section></>;
 }
