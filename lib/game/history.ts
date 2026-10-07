@@ -15,3 +15,24 @@ export function moveTone(mode: string | undefined, choice: string | null) {
     if (mode === 'apples') return choice === '0' ? 'trust' : 'betray';
     return 'move';
 }
+
+export function matchAwards(room: HistoryRoom) {
+    const records = room.players.map(player => {
+        const moves = room.history.flatMap(h => h.results.filter(r => r.id === player.id));
+        return {
+            name: player.name,
+            betrayals: moves.filter(r => moveTone(room.mode,r.choice) === 'betray').length,
+            trusts: moves.filter(r => moveTone(room.mode,r.choice) === 'trust').length,
+            submitted: moves.filter(r => r.choice !== null).length,
+            swing: moves.reduce((best, r, i) => i ? Math.max(best, Math.abs(r.gain - moves[i-1].gain)) : best, 0),
+        };
+    });
+    const award = (title: string, key: 'betrayals' | 'trusts' | 'submitted' | 'swing', unit: string) => {
+        const value = Math.max(0, ...records.map(p => p[key]));
+        return { title, names: value ? records.filter(p => p[key] === value).map(p => p.name).join(' & ') : 'No one this match', detail: `${value} ${unit}` };
+    };
+    const awards = room.mode === 'trust' || !room.mode || room.mode === 'apples'
+        ? [award('Most betrayals','betrayals','betrayals'), award('Most trusting','trusts','cooperative moves')]
+        : [award('Most committed','submitted','submitted moves')];
+    return [...awards, award('Biggest swing','swing','points between consecutive round gains')];
+}
