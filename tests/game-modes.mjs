@@ -69,3 +69,16 @@ assert.equal(finalPresentation({score:0,eligible:true},[{score:30,id:'p1'}],'p0'
 assert.equal(finalPresentation({score:-50,eligible:false},[],'p0').title,'NO CONTEST');
 
 fs.rmSync(out,{recursive:true,force:true});console.log(`PASS ${MODES.length} modes and payoff / timeout boundary checks.`);
+
+// Whispers never cross the viewer boundary, including after the reveal.
+const whisperRoom=room(3);beginRound(whisperRoom,1000);
+act(whisperRoom,'p0','chat',{text:'Secret pact',recipientId:'p1'},2000);
+act(whisperRoom,'p0','chat',{text:'Public greeting'},3000);
+for(const id of ['p0','p1'])assert.equal(view(whisperRoom,id,3000).messages.length,2);
+assert.deepEqual(view(whisperRoom,'p2',3000).messages.map(m=>m.text),['Public greeting']);
+assert.equal(JSON.stringify(view(whisperRoom,'p2',3000)).includes('Secret pact'),false);
+assert.throws(()=>act(whisperRoom,'p0','chat',{text:'x',recipientId:'missing'},4000));
+assert.throws(()=>act(whisperRoom,'p0','chat',{text:'x',recipientId:'p0'},4000));
+reveal(whisperRoom,5000);
+assert.throws(()=>act(whisperRoom,'p0','chat',{text:'x',recipientId:'p1'},6000));
+assert.equal(view(whisperRoom,'p2',6000).messages.length,1);
