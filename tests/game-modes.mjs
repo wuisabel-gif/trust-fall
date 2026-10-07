@@ -68,7 +68,7 @@ assert.equal(finalPresentation({score:0,eligible:false},[{score:30,id:'p1'}],'p0
 assert.equal(finalPresentation({score:0,eligible:true},[{score:30,id:'p1'}],'p0').tone,'setback');
 assert.equal(finalPresentation({score:-50,eligible:false},[],'p0').title,'NO CONTEST');
 
-fs.rmSync(out,{recursive:true,force:true});console.log(`PASS ${MODES.length} modes and payoff / timeout boundary checks.`);
+console.log(`PASS ${MODES.length} modes and payoff / timeout boundary checks.`);
 
 // Whispers never cross the viewer boundary, including after the reveal.
 const whisperRoom=room(3);beginRound(whisperRoom,1000);
@@ -117,3 +117,5 @@ const waiting=joinParticipant(fullTable,'waiting-token','Waiting',0);fullTable.p
 const overflow=joinParticipant(fullTable,'overflow-token','Overflow',0);assert.throws(()=>act(fullTable,overflow.id,'takeSeat',{},3000));act(fullTable,'p1','leave',{},3000);act(fullTable,overflow.id,'takeSeat',{},4000);assert.equal(fullTable.players.length,6);
 const awardRoom=resolve('trust',['cooperate','betray']);assert.equal(matchAwards(awardRoom).find(a=>a.title==='Most betrayals').names,'Player 1');assert.equal(matchAwards(awardRoom).find(a=>a.title==='Most trusting').names,'Player 0');
 console.log('PASS spectators cannot act or see whispers; rematch seating, fullTable-table waitlist and awards');
+
+fs.rmSync(out,{recursive:true,force:true});

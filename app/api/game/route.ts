@@ -26,6 +26,7 @@ export async function POST(request:Request){try{
   const payload=await request.json() as Record<string,unknown>,action=String(payload.action??'');
   if(action==='create'){
     const name=nameOf(payload.name),token=crypto.randomUUID(),id=crypto.randomUUID(),now=Date.now();
+    await db().prepare('DELETE FROM rooms WHERE updated_at < ?').bind(now - 86400000).run();
     for(let i=0;i<5;i++){
       const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';const bytes=crypto.getRandomValues(new Uint8Array(5));const code=Array.from(bytes,x=>alphabet[x%alphabet.length]).join('');
       const r:Room={code,host:id,players:[{id,token,name,avatar:characterIndex(payload.avatar),score:0,ready:false,lastChat:0}],phase:'lobby',round:0,deadline:0,choices:{},pairs:[],results:[],messages:[],history:[],created:now};
