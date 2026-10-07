@@ -54,7 +54,7 @@ You do not need six people. Two seats are enough, and you can practice alone:
 
 AI seats are clearly marked and are ready automatically. The host can remove them in the waiting room. You can mix real friends and AI in the same room.
 
-These are built-in strategy bots with different bluffing styles. They use past reveals, make timed secret choices, and send preset table-talk messages. They cannot inspect current human choices. No external AI API or key is needed.
+These are built-in strategy bots with different bluffing styles. They use past reveals, make timed secret choices, and choose from personality-specific table-talk lines with reactions to past moves and standings. Dialogue avoids recent repetition and duplicate lines within the same round. They cannot inspect current human choices. No external AI API or key is needed.
 
 ![Solo practice with five AI opponents](docs/screenshots/06-ai-practice.png)
 
