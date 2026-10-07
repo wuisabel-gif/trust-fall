@@ -1,3 +1,4 @@
+import { botDialogue } from './bot-dialogue';
 import type { Choice, Player, Room } from './engine';
 export type BotStyle = 'friendly' | 'cautious' | 'opportunist' | 'unpredictable' | 'mirror';
 const profiles: {name:string; avatar:number; style:BotStyle}[] = [
@@ -37,8 +38,7 @@ export function playBots(room:Room,now:number) {
     const seed=hash(`${bot.id}:${room.round}`);
     if(now>=start+2000+seed%2500&&bot.lastChat<start) {
       const partner=room.players.find(p=>p.id===partnerId)!;
-      const lines=[`${partner.name}, let's both cooperate.`, 'Promises are easy. The reveal will tell us more.', 'I remember what happened last round.', 'A little trust could pay off for both of us.'];
-      room.messages.push({id:crypto.randomUUID(),name:`${bot.name} · AI`,text:lines[seed%lines.length],at:now});
+      room.messages.push({id:crypto.randomUUID(),name:`${bot.name} · AI`,text:botDialogue(room,bot,partner,start,seed),at:now});
       room.messages=room.messages.slice(-60);bot.lastChat=now;
     }
     if(!room.choices[bot.id]&&now>=start+8000+seed%7000) room.choices[bot.id]=botChoice(room.history,room.round,bot,partnerId);
