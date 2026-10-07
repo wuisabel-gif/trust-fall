@@ -1,3 +1,4 @@
+import { settingsOf } from '../settings';
 import type { Room, Result } from '../engine';
 import { modeOf } from './catalog';
 export type ModeState = {
@@ -241,7 +242,7 @@ export function resolveMode(r: Room): Result[] {
             for (const id of submitted)
                 gain(id, 0, `${r.players.find(p => p.id === win)?.name} wins ${cardName(card)} for ${bid} credits`);
         }
-        if (r.round === 5) {
+        if (r.round === settingsOf(r).rounds) {
             const ordered = [...ids].sort((a, b) => pokerValue(s.hands[b]) - pokerValue(s.hands[a]) || s.credits[b] - s.credits[a]);
             for (const id of ids) {
                 const rank = ordered.filter(other => pokerValue(s.hands[other]) > pokerValue(s.hands[id]) || pokerValue(s.hands[other]) === pokerValue(s.hands[id]) && s.credits[other] > s.credits[id]).length;
@@ -267,7 +268,7 @@ export function resolveMode(r: Room): Result[] {
         s.kingdoms = s.kingdoms.map((lp, i) => Math.max(0, lp - cost[i] - Math.max(0, damage[i] - defense[i])));
         for (const id of ids)
             gain(id, c[id] === undefined && needsChoice(r, id) ? -10 : 0, `Kingdom ${faction(r, id) + 1}: ${s.kingdoms[faction(r, id)]} life`);
-        if (r.round === 5)
+        if (r.round === settingsOf(r).rounds)
             for (const id of ids)
                 out(id).gain += s.kingdoms[faction(r, id)];
     }
@@ -329,7 +330,7 @@ export function resolveMode(r: Room): Result[] {
             s.shields[id] = Math.max(0, s.shields[id] - (hits[id] ?? 0));
         for (const id of submitted)
             gain(id, 0, `${s.shields[id]} shields · ${s.energy[id]} energy`);
-        if (r.round === 5)
+        if (r.round === settingsOf(r).rounds)
             for (const id of ids)
                 out(id).gain += s.shields[id] * 20 + s.energy[id] * 5;
     }

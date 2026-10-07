@@ -1,3 +1,4 @@
+import { settingsOf } from './settings';
 import { modeOf } from './modes/catalog';
 import { needsChoice, optionsFor, faction, type PublicModeContext } from './modes/runtime';
 import { botDialogue } from './bot-dialogue';
@@ -39,7 +40,7 @@ export function botChoice(history: Room['history'], round: number, bot: Player, 
     }
 }
 export function playBots(room: Room, now: number) {
-    const start = room.deadline - 45000;
+    const start = room.deadline - settingsOf(room).negotiationSeconds * 1000;
     for (const bot of room.players.filter(p => p.isBot)) {
         const pair = room.pairs.find(pair => pair.includes(bot.id));
         if (!needsChoice(room, bot.id))
@@ -58,7 +59,7 @@ export function playBots(room: Room, now: number) {
 }
 function modeChat(room: Room, bot: Player, seed: number) {
     const lines = ['Let’s coordinate before we lock in.', 'A promise is only useful if you keep it.', 'I’m watching the score as well as the chat.', 'Who wants to make a pact this round?', 'I have a plan. You’ll see it at the reveal.', 'The safest choice isn’t always the winning one.', 'I remember how the last round ended.', 'Nobody gets a free alliance.'];
-    const used = new Set(room.messages.filter(m => !m.recipientId && m.at >= room.deadline - 45000).map(m => m.text));
+    const used = new Set(room.messages.filter(m => !m.recipientId && m.at >= room.deadline - settingsOf(room).negotiationSeconds * 1000).map(m => m.text));
     for (let i = 0; i < lines.length; i++) {
         const line = `${modeOf(room.mode).name}: ${lines[(seed + i) % lines.length]}`;
         if (!used.has(line))

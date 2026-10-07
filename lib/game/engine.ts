@@ -1,3 +1,4 @@
+import { settingsOf, ROUND_OPTIONS, TIMER_OPTIONS, type MatchSettings } from './settings';
 import { addBot, playBots, type BotStyle } from './bots';
 import { modeOf, MODES } from './modes/catalog';
 import { initializeMode, needsChoice, optionsFor, resolveMode, roundDetails, type ModeState } from './modes/runtime';
@@ -31,6 +32,7 @@ export type Result = {
     detail?: string;
 };
 export type Room = {
+    settings?: MatchSettings;
     mode?: string;
     modeState?: ModeState;
     roundSeed?: number;
@@ -63,7 +65,7 @@ export function pairPlayers(players: Player[], round: number) {
     return pairs;
 }
 export function beginRound(r: Room, now: number) { if (!r.modeState)
-    initializeMode(r); r.roundSeed = crypto.getRandomValues(new Uint32Array(1))[0]; r.round++; r.phase = 'negotiation'; r.deadline = now + 45000; r.choices = {}; r.results = []; r.pairs = pairPlayers(r.players, r.round); }
+    initializeMode(r); r.roundSeed = crypto.getRandomValues(new Uint32Array(1))[0]; r.round++; r.phase = 'negotiation'; r.deadline = now + settingsOf(r).negotiationSeconds * 1000; r.choices = {}; r.results = []; r.pairs = pairPlayers(r.players, r.round); }
 export function reveal(r: Room, now: number) {
     r.results = resolveMode(r);
     for (const p of r.players)
@@ -81,7 +83,7 @@ export function tick(r: Room, now: number) {
             reveal(r, now);
     }
     if (r.phase === 'reveal' && now >= r.deadline) {
-        if (r.round === 5) {
+        if (r.round >= settingsOf(r).rounds) {
             r.phase = 'finished';
             r.deadline = 0;
         }
@@ -91,7 +93,7 @@ export function tick(r: Room, now: number) {
 }
 export function view(r: Room, id: string, now: number) {
     const { roundSeed, deck, choices, ...publicState } = r;
-    return { ...publicState, messages: r.messages.filter(m => !m.recipientId || m.senderId === id || m.recipientId === id), mode: modeOf(r.mode).id, choiceOptions: r.phase === 'negotiation' ? optionsFor(r, id) : [], roundInfo: r.phase === 'negotiation' ? roundDetails(r, id) : '', canChoose: r.phase === 'negotiation' && needsChoice(r, id), players: r.players.map(({ token, lastChat, botStyle, ...p }, index) => ({ ...p, avatar: p.avatar ?? index % 4, isBot: !!p.isBot, eligible: r.history.some(h => h.results.some(x => x.id === p.id && x.choice !== null)), locked: r.choices[p.id] !== undefined })), choices: undefined, myChoice: r.choices[id] ?? null, you: id, serverNow: now };
+    return { ...publicState, settings: settingsOf(r), messages: r.messages.filter(m => !m.recipientId || m.senderId === id || m.recipientId === id), mode: modeOf(r.mode).id, choiceOptions: r.phase === 'negotiation' ? optionsFor(r, id) : [], roundInfo: r.phase === 'negotiation' ? roundDetails(r, id) : '', canChoose: r.phase === 'negotiation' && needsChoice(r, id), players: r.players.map(({ token, lastChat, botStyle, ...p }, index) => ({ ...p, avatar: p.avatar ?? index % 4, isBot: !!p.isBot, eligible: r.history.some(h => h.results.some(x => x.id === p.id && x.choice !== null)), locked: r.choices[p.id] !== undefined })), choices: undefined, myChoice: r.choices[id] ?? null, you: id, serverNow: now };
 }
 export function act(r: Room, id: string, action: string, payload: Record<string, unknown>, now: number) {
     const p = r.players.find(x => x.id === id);
@@ -129,6 +131,13 @@ export function act(r: Room, id: string, action: string, payload: Record<string,
             player.ready = !!player.isBot;
             player.score = 0;
         }
+    }
+    else if (action === 'settings') {
+        if (id !== r.host || r.phase !== 'lobby') throw Error('Only the host can change match settings in the lobby.');
+        const rounds = Number(payload.rounds), negotiationSeconds = Number(payload.negotiationSeconds);
+        if (!ROUND_OPTIONS.some(n => n === rounds) || !TIMER_OPTIONS.some(n => n === negotiationSeconds)) throw Error('Choose a listed round count and timer.');
+        r.settings = { rounds, negotiationSeconds };
+        for (const player of r.players) player.ready = !!player.isBot;
     }
     else if (action === 'avatar') {
         if (r.phase !== 'lobby')

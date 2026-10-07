@@ -1,3 +1,4 @@
+import { settingsOf } from './settings';
 import type { Player, Room } from './engine';
 import type { BotStyle } from './bots';
 const voices: Record<BotStyle, readonly string[]> = {
@@ -52,7 +53,7 @@ const voices: Record<BotStyle, readonly string[]> = {
     'We teach each other how this game will go.',
   ],
 };
-type PublicContext = Pick<Room, 'round' | 'players' | 'history' | 'messages'>;
+type PublicContext = Pick<Room, 'round' | 'players' | 'history' | 'messages' | 'settings'>;
 // Current secret choices are deliberately absent from this dialogue context.
 export function botDialogue(context: PublicContext, bot: Player, partner: Player, roundStart: number, seed: number): string {
   const candidates = [...voices[bot.botStyle ?? 'unpredictable']].map(line => line.replaceAll('{partner}', partner.name));
@@ -65,7 +66,7 @@ export function botDialogue(context: PublicContext, bot: Player, partner: Player
   const lead = Math.max(...context.players.map(player => player.score));
   if (context.round > 1 && bot.score < lead) candidates.push('I’m behind on points. Playing it safe might not be enough.');
   if (context.round > 1 && bot.score === lead) candidates.push('I’ve got a lead to protect. Every choice matters now.');
-  if (context.round === 5) candidates.unshift(`${partner.name}, last round. No future favors to bargain with.`);
+  if (context.round === settingsOf(context).rounds) candidates.unshift(`${partner.name}, last round. No future favors to bargain with.`);
   const speaker = `${bot.name} · AI`;
   const recentOwn = new Set(context.messages.filter(message => message.name === speaker).slice(-5).map(message => message.text));
   const thisRound = new Set(context.messages.filter(message => message.at >= roundStart).map(message => message.text));

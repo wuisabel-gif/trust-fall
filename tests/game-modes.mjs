@@ -82,3 +82,21 @@ assert.throws(()=>act(whisperRoom,'p0','chat',{text:'x',recipientId:'p0'},4000))
 reveal(whisperRoom,5000);
 assert.throws(()=>act(whisperRoom,'p0','chat',{text:'x',recipientId:'p1'},6000));
 assert.equal(view(whisperRoom,'p2',6000).messages.length,1);
+
+// All modes honor 3/5/7 rounds, including deferred final scoring.
+for(const mode of MODES)for(const rounds of [3,5,7]){
+ const r=room(6);act(r,'p0','mode',{mode:mode.id},1000);
+ act(r,'p0','settings',{rounds,negotiationSeconds:90},1000);
+ assert.throws(()=>act(r,'p1','settings',{rounds:3,negotiationSeconds:30},1000));
+ assert.throws(()=>act(r,'p0','settings',{rounds:4,negotiationSeconds:30},1000));
+ for(const p of r.players)act(r,p.id,'ready',{},1000);act(r,'p0','start',{},1000);
+ assert.equal(r.deadline,91000);assert.throws(()=>act(r,'p0','settings',{rounds:3,negotiationSeconds:30},1001));
+ while(r.phase!=='finished'){
+  assert.ok(r.round<=rounds);
+  if(r.phase==='negotiation'){for(const p of r.players.filter(p=>needsChoice(r,p.id)))r.choices[p.id]=optionsFor(r,p.id)[0].value;reveal(r,r.deadline-1);}
+  tick(r,r.deadline);
+ }
+ assert.equal(r.history.length,rounds);
+ if(mode.id==='auction')assert.ok(r.results.some(r=>r.gain>0),'auction payout at selected final round');
+}
+console.log('PASS custom match lengths across all 22 modes and host-only settings');
