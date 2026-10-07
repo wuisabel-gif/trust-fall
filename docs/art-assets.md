@@ -14,3 +14,9 @@ CSS renders the portrait strip at 400% width and selects each quarter with backg
 Prompt: four original adult waist-up portraits—silver-bob woman in a black jacket, Black man with short curls in a charcoal suit, auburn-ponytail woman in a high-collar coat, and East Asian man with shoulder-length dark hair in a black turtleneck. Guarded confident expressions, gold rim light, equal horizontal cells, transparent background, no room/table/UI/text.
 
 Players select one of eight characters before joining or in the lobby. The server stores the selected index in the shared player record; existing rooms receive a compatible default appearance. Character changes in the lobby reset readiness.
+
+## Anime outcome atlas
+
+`public/outcome-atlas.png` is a new original 2×2 illustration atlas generated with the built-in imagegen tool. Quadrants: gold victory, crimson betrayal, steel-blue setback, ivory stalemate. The CSS positions these quadrants; result headlines, scores, explanations and buttons remain live HTML. The art is an atmospheric vignette and does not replace the player's selected portrait.
+
+Prompt: “Production square sprite atlas for TRUST / FALL, exactly four equal edge-to-edge square illustrations in a 2×2 grid, no text, labels, UI, logos or watermarks. Premium original serious anime visual-novel linework, adult competitors in charcoal formal clothing in an underground tournament room. Top left: confident dark-haired strategist, gold victory lighting and flecks. Top right: black-gloved hand snapping a crimson alliance thread, intense eyes and scarlet rim light. Bottom left: resolute silver-haired adult woman, steel-blue setback lighting. Bottom right: two competitors facing each other over an ivory chess king, tense balanced stalemate. Deep near-black backgrounds that blend into #0b0c0c.”
