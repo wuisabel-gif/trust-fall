@@ -2,6 +2,8 @@
 
 **English** | [简体中文](README.zh-CN.md) | [日本語](README.ja.md)
 
+The game supports English and Japanese. Use the language switch in the header or [play in Japanese](https://trust-fall-table.actionintime.chatgpt.site/?lang=ja). Each player chooses their own language, even in the same room.
+
 A collection of 22 browser social strategy games for 2–6 seats. Negotiate, submit secret moves, reveal together, and compete across 3, 5 or 7 rounds. Share the public link and a five-character room code. Players do not need an account.
 
 ## Play the game
