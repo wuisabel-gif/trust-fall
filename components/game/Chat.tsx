@@ -1,3 +1,4 @@
+import { useLanguage } from '../../lib/i18n/language';
 import { Send } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type { Message } from '../../lib/game/engine';
@@ -12,6 +13,8 @@ export function Chat({ messages, players, you, negotiating, send, busy, readOnly
     send: (text: string, recipientId?: string) => Promise<boolean>;
     busy: boolean;
 }) {
+ const {t,language}=useLanguage();
+
     const [text, setText] = useState('');
     const [recipient, setRecipient] = useState('');
     const end = useRef<HTMLDivElement>(null);
@@ -20,27 +23,27 @@ export function Chat({ messages, players, you, negotiating, send, busy, readOnly
     const whisperClosed = !!recipient && !negotiating;
     useEffect(() => { end.current?.scrollIntoView({ block: 'nearest' }); }, [messages.length]);
     return <aside className="chat">
-        <h2>TABLE TALK <span>LIVE</span></h2>
+        <h2>{t("TABLE TALK ")}<span>{t("LIVE")}</span></h2>
         <div className="messages" aria-live="polite">
-            {!messages.length && <p className="chat-empty">Talk to the table, or whisper during negotiation.</p>}
+            {!messages.length && <p className="chat-empty">{t("Talk to the table, or whisper during negotiation.")}</p>}
             {messages.map(m => <div className={`message ${m.recipientId ? 'whisper' : ''}`} key={m.id}>
-                <div><strong>{m.name}</strong><time>{new Date(m.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</time></div>
-                {m.recipientId && <small>Private · {m.senderId === you ? `to ${players.find(p => p.id === m.recipientId)?.name ?? 'former player'}` : 'to you'}</small>}
-                <p>{m.text}</p>
+                <div><strong>{m.name}</strong><time>{t(new Date(m.at).toLocaleTimeString(language==='ja'?'ja-JP':'en-US', { hour: '2-digit', minute: '2-digit' }))}</time></div>
+                {m.recipientId && <small>{t("Private · ")}{t(m.senderId === you ? `to ${players.find(p => p.id === m.recipientId)?.name ?? 'former player'}` : 'to you')}</small>}
+                <p>{!m.senderId && players.some(p=>p.isBot && m.name===`${p.name} · AI`) ? t(m.text) : m.text}</p>
             </div>)}
             <div ref={end}/>
         </div>
         <div className="chat-audience">
-            <label htmlFor="chat-recipient">{readOnly ? 'Watching' : 'Send to'}</label>
+            <label htmlFor="chat-recipient">{t(readOnly ? 'Watching' : 'Send to')}</label>
             <select id="chat-recipient" disabled={readOnly} value={recipient} onChange={e => setRecipient(e.target.value)}>
-                <option value="">Everyone</option>
-                {players.filter(p => p.id !== you).map(p => <option key={p.id} value={p.id} disabled={!negotiating}>{p.name}{p.isBot ? ' · AI' : ''} (private)</option>)}
+                <option value="">{t("Everyone")}</option>
+                {players.filter(p => p.id !== you).map(p => <option key={p.id} value={p.id} disabled={!negotiating}>{p.name}{t(p.isBot ? ' · AI' : '')}{t(" (private)")}</option>)}
             </select>
-            <small>{whisperClosed ? 'Whispers reopen next negotiation. Draft kept private.' : recipient ? 'Only you and this player can see it. AI seats do not reply.' : 'Visible to everyone at the table.'}</small>
+            <small>{t(whisperClosed ? 'Whispers reopen next negotiation. Draft kept private.' : recipient ? 'Only you and this player can see it. AI seats do not reply.' : 'Visible to everyone at the table.')}</small>
         </div>
         <form onSubmit={async e => { e.preventDefault(); if (!readOnly && !whisperClosed && await send(text, recipient || undefined)) setText(''); }}>
-            <input suppressHydrationWarning aria-label="Table chat message" disabled={readOnly} placeholder={recipient ? 'Whisper…' : 'Type a message…'} maxLength={280} value={text} onChange={e => setText(e.target.value)}/>
-            <button aria-label="Send message" disabled={readOnly || busy || !text.trim() || whisperClosed}><Send size={20}/></button>
+            <input suppressHydrationWarning aria-label={t("Table chat message")} disabled={readOnly} placeholder={t(recipient ? 'Whisper…' : 'Type a message…')} maxLength={280} value={text} onChange={e => setText(e.target.value)}/>
+            <button aria-label={t("Send message")} disabled={readOnly || busy || !text.trim() || whisperClosed}><Send size={20}/></button>
         </form>
     </aside>;
 }

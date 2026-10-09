@@ -13,7 +13,8 @@
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate",
     "test:game": "node tests/game-modes.mjs",
-    "test:api": "node tests/api-route.mjs"
+    "test:api": "node tests/api-route.mjs",
+    "test:i18n": "node tests/i18n.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
